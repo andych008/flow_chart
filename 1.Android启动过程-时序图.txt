@@ -1,0 +1,74 @@
+@startuml
+
+'请先安装PlantUML plugin查看该uml
+'http://androidxref.com/9.0.0_r3/xref/frameworks/base/cmds/app_process/app_main.cpp'
+'http://androidxref.com/9.0.0_r3/xref/frameworks/base/core/jni/AndroidRuntime.cpp'
+'http://androidxref.com/9.0.0_r3/xref/frameworks/base/core/java/com/android/internal/os/ZygoteInit.java'
+'Android中Activity启动过程探究 ：https://www.cnblogs.com/kross/p/4025075.html'
+
+title __Android启动过程__
+hide footbox
+
+
+entity "Init进程" as Init
+entity "其它系统服务\n(都有**独立进程**)" as otherSysProcess
+entity "Zygote进程" as Zygote
+entity "SystemServer进程" as SystemServer
+
+
+hnote over otherSysProcess : servicemanager\n surfaceflinger\n media、drm\n bootanim、installd
+Init [#green]-> Init: init.rc 文件解析
+activate Init
+    Init [#green]-> Zygote: 启动Zygote
+    Init -> otherSysProcess: 启动其它系统服务
+deactivate Init
+group app_main.cpp
+    hnote over Zygote#ccffe5: 三部曲：1. 启动进程
+    Zygote -> Zygote: 启动Zygote
+    note right: 这是zygote模式。\n另外还有application模式。
+
+end
+
+group AndroidRuntime.cpp
+    hnote over Zygote#ccffe5: 三部曲：2. 初始化(native部分)
+    Zygote -> Zygote: 1、startVm函数：\n启动Android虚拟机，JNI_CreateJavaVM()
+    Zygote -> Zygote: 2、startReg函数：\n注册Android的JNI函数
+end
+hnote over Zygote#ccffe5: 三部曲：2. 初始化(java部分)
+Zygote -> Zygote: 3、进入Java世界：\n ZygoteInit.main()
+activate Zygote
+    Zygote -> Zygote: 创建一个Server端的Socket：\n zygoteServer#registerServerSocketFromEnv()
+    Zygote -> Zygote: 预加载资源、常用类、共享库、OpenGL、HAL：\n preload()
+    Zygote -> Zygote: fork出SystemServer进程：\n Zygote.forkSystemServer()
+    activate Zygote
+        hnote over SystemServer#88eeff: 三部曲：1. 启动进程
+        Zygote -> SystemServer: 子进程
+        Zygote -> Zygote: 父进程
+    deactivate Zygote
+deactivate Zygote
+hnote over SystemServer#88eeff: 三部曲：2. 初始化
+SystemServer -> SystemServer: 1、启动Binder机制：\n ZygoteInit.nativeZygoteInit();
+SystemServer -> SystemServer: 2、调用入口函数SystemServer.main()
+activate SystemServer
+    note left: 和普通的应用一样，\nlooper、 context都有
+    SystemServer -> SystemServer: Prepare the main looper thread ：\n Looper.prepareMainLooper();
+    SystemServer -> SystemServer: Initialize native services ：\n System.loadLibrary("android_servers");
+    SystemServer -> SystemServer: createSystemContext();
+
+    SystemServer -> SystemServer: startXXXServices（分批启动）：\n Bootstrap、Core、Other;
+    activate SystemServer
+        SystemServer -> SystemServer: systemReady();
+        activate SystemServer
+            SystemServer -> Launcher: 启动Launcher
+                    deactivate SystemServer
+    deactivate SystemServer
+    hnote over SystemServer#88eeff: 三部曲：3. 消息循环
+    SystemServer -> SystemServer: Looper.loop()
+deactivate SystemServer
+
+hnote over Zygote#ccffe5: 三部曲：3. 消息循环
+Zygote -> Zygote: zygoteServer#runSelectLoop()
+loop#ccffe5 等待socket消息，fork应用进程
+    Zygote -> Zygote: Zygote.forkAndSpecialize()
+end
+@enduml

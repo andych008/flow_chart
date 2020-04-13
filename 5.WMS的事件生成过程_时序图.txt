@@ -1,0 +1,65 @@
+@startuml
+
+'请先安装PlantUML plugin查看该uml
+
+
+title __WMS的事件生成过程__
+
+
+entity EventHub
+entity InputReader
+database Queue
+entity InputDispatcher
+
+entity InputMonitor
+entity WindowManagerService as wms
+entity "ViewRootImpl中的\n WindowInputEventReceiver" as InputEventReceiver
+entity DecorView
+
+hnote over Queue#ccffe5:事件缓存队列
+hnote over wms#ccffe5:下一步：\n事件分发到Activity
+
+EventHub -> EventHub: 读取/dev/input/下的设备文件
+activate EventHub
+deactivate EventHub
+
+group InputReaderThread
+    InputReader -> InputReader: loopOnce()
+    activate InputReader
+        InputReader -> EventHub: getEvents()
+        InputReader -> Queue: 事件入队
+    deactivate InputReader
+
+    activate Queue#ccffe5
+end
+
+
+wms -> InputMonitor: updateInputWindowsLw()\n更新焦点窗口
+group InputDispatcherThread
+
+    InputDispatcher ->InputDispatcher: dispatchOnce()
+    activate InputDispatcher
+        InputDispatcher -> Queue: 读取事件
+        deactivate Queue
+
+        InputDispatcher -> InputDispatcher :事件预处理\n1.repeatCount\n2.交给wms处理\n3.忽略
+        activate InputDispatcher
+        deactivate InputDispatcher
+
+        InputDispatcher -> InputDispatcher: findFocusedWindowTargetsLocked()
+        activate InputDispatcher
+                InputDispatcher -> InputMonitor: 查询当前焦点窗口
+                activate InputMonitor
+                    InputMonitor --> InputDispatcher
+                deactivate InputMonitor
+        deactivate InputDispatcher
+
+
+
+        InputDispatcher -> InputMonitor: dispatchEventLocked()\n分发事件给当前焦点窗口
+    deactivate InputDispatcher
+end
+
+InputMonitor -> InputEventReceiver:通过InputChannel的socket通知
+InputEventReceiver -> DecorView:经过各层责任链InputStage\n最终到DecoerView
+@enduml

@@ -1,0 +1,122 @@
+@startuml
+
+'请先安装PlantUML plugin查看该uml
+'简述Activity与Window关系 ：http://gityuan.com/2017/04/16/activity-with-window/'
+'Android View 绘制流程之 DecorView 与 ViewRootImpl ：https://www.cnblogs.com/huansky/p/11911549.html'
+'Android中Activity启动过程探究 ：https://www.cnblogs.com/kross/p/4025075.html'
+'带你彻底理解 Window 和 WindowManager :https://www.jianshu.com/p/0b9d5627ac99'
+'Android仿微信文章悬浮窗效果  :https://zhuanlan.zhihu.com/p/47085887'
+'我所理解的PhoneWindow的一个作用  :https://blog.csdn.net/u013356254/article/details/55116259'
+
+title __DecorView绑定-调用关系__
+
+
+entity ActivityThread
+entity Activity
+entity PhoneWindow
+'http://androidxref.com/9.0.0_r3/xref/frameworks/base/core/java/com/android/internal/policy/PhoneWindow.java'
+
+entity DecorView
+entity WindowManagerImpl as WindowManager
+entity WindowManagerGlobal
+
+entity ViewRootImpl
+'http://androidxref.com/9.0.0_r3/xref/frameworks/base/core/java/android/view/ViewRootImpl.java'
+
+entity Choreographer
+entity IWindowSession
+'entity TraversalRunnable
+
+hnote over PhoneWindow#ccffe5: Window 的实现类，\n包含一个 DecorView\n功能：给view包裹一层DecorView
+hnote over DecorView#ccffe5: Activity的根View。\n包含：TitleView、ContentView
+hnote over WindowManager#ccffe5: 管理所有的窗口
+hnote over ViewRootImpl#ccffe5: 实现View树的绘制，\n有三个关键方法。
+hnote over IWindowSession#ccffe5: WMS中Session的Binder代理对象 。\n每个应用进程只有唯一的 Session\n 对象与 WMS 通信。
+
+
+ActivityThread -> ActivityThread: handleLaunchActivity()
+activate ActivityThread
+
+    ActivityThread -> Activity: xxx -> attach()
+    activate Activity
+        Activity -> PhoneWindow: mWindow =\nnew PhoneWindow();
+        Activity -> PhoneWindow: mWindowManager =\n mWindow.getWindowManager();
+    deactivate Activity
+
+    ActivityThread -> Activity: xxx -> onCreate()
+    activate Activity
+        Activity -> PhoneWindow: setContentView()
+        note left : 建立view tree的数据结构，\n还没有真正显示
+        activate PhoneWindow
+            PhoneWindow -> PhoneWindow: installDecor()
+            activate PhoneWindow
+                PhoneWindow -> DecorView: mDecor.setWindow(this)
+            deactivate PhoneWindow
+            note right : DecorView和window\n相互持有
+        deactivate PhoneWindow
+    deactivate Activity
+
+    ActivityThread -> ActivityThread: xxx -> handleResumeActivity()
+    activate ActivityThread
+        ActivityThread -> ActivityThread: ActivityRecordClient r =  performResumeActivity()
+        activate ActivityThread
+            ActivityThread -> Activity: xxx -> onStart()
+            ActivityThread -> Activity: xxx -> onResume()
+        deactivate ActivityThread
+
+        ActivityThread [#green]-> WindowManager: wm.addView(decor, l);
+        hnote left#ccffe5 : 关键步骤：\n把view加入wms
+        activate WindowManager
+            WindowManager -> WindowManagerGlobal: addView();
+        deactivate WindowManager
+        activate WindowManagerGlobal
+            WindowManagerGlobal -> ViewRootImpl: root = \nnew ViewRootImpl()
+            activate ViewRootImpl
+                hnote over ViewRootImpl#ccffe5: 当前是主线程
+                ViewRootImpl -> ViewRootImpl: mThread = Thread.currentThread();
+                ViewRootImpl -> ViewRootImpl: mWindow = new W(this);
+                note left : 数据类型为IWindow.Stub\n在wms中代表应用端
+                ViewRootImpl -> WindowManagerGlobal: mWindowSession = \nWindowManagerGlobal.getWindowSession();
+                note right : 数据类型为IWindowSession, \n同一进程只对应唯一Session代理对象。
+            deactivate ViewRootImpl
+            WindowManagerGlobal -> ViewRootImpl: root.setView(View view)//比如DecorView
+            activate ViewRootImpl
+                ViewRootImpl -> ViewRootImpl: requestLayout()
+                activate ViewRootImpl
+                    ViewRootImpl -> ViewRootImpl: scheduleTraversals()
+                    activate ViewRootImpl
+                        ViewRootImpl -> Choreographer: mChoreographer.postCallback(… ,mTraversalRunnable)
+                    deactivate ViewRootImpl
+                deactivate ViewRootImpl
+
+                ViewRootImpl -> ViewRootImpl: mInputChannel = new InputChannel();
+                ViewRootImpl -> IWindowSession: mWindowSession.addToDisplay(mWindow, ...mInputChannel)
+                note left : 和wms可以双向通信了\n同时完成InputChannel的注册
+
+                ViewRootImpl -> ViewRootImpl: SyntheticInputStage\n ViewPostImeInputStage\n NativePostImeInputStage\n ...
+                note left : 对责任链进行组装
+                ViewRootImpl -> DecorView: assignParent(this)
+                note left : 终于终于，mDecor知道了自己父亲是谁
+            deactivate ViewRootImpl
+        deactivate WindowManagerGlobal
+        ActivityThread -> Activity: r.activity.makeVisible();
+        activate Activity
+            Activity -> DecorView : mDecor.makeVisible
+            note right : view可见
+        deactivate Activity
+    deactivate ActivityThread
+deactivate ActivityThread
+
+'performTraversals'
+'relayoutWindow'
+'mWindowSession.relayout(..., mSurface)'
+
+ViewRootImpl -> ViewRootImpl: performTraversals()
+activate ViewRootImpl
+    ViewRootImpl -> ViewRootImpl: relayoutWindow()
+    activate ViewRootImpl
+        ViewRootImpl -> IWindowSession: mWindowSession.relayout(..., mSurface)
+        note left : 申请Surface，\n有了Surface才可以把绘制的内容写入其中的buffer
+    deactivate ViewRootImpl
+deactivate ViewRootImpl
+@enduml

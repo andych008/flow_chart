@@ -1,0 +1,75 @@
+@startuml
+
+'请先安装PlantUML plugin查看该uml
+'Android - Activity 启动过程 ：https://github.com/jeanboydev/Android-ReadTheFuckingSourceCode/blob/master/article/android/framework/Android-Activity%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B.md'
+'2019-08-13: 说说你对app（或进程）启动流程的理解? ：https://github.com/MicroKibaco/CrazyDailyQuestion/issues/11'
+'参考 3分钟看懂Activity启动流程 ：https://www.jianshu.com/p/9ecea420eb52'
+'一张图弄清Activity的启动过程 ：https://juejin.im/post/5c7f3471f265da2db5425c4b'
+'简述Activity生命周期-调用链 ：http://gityuan.com/2016/03/18/start-activity-cycle/#%E4%B8%89-%E8%B0%83%E7%94%A8%E9%93%BE'
+'Android中Activity启动过程探究 ：https://www.cnblogs.com/kross/p/4025075.html'
+
+title __Activity的启动过程-调用关系__
+
+
+entity "Launcher"
+entity Instrumentation
+entity AMS
+entity ActivityStackSupervisor as ASS
+entity PackageManagerService as PKMS
+entity ApplicationThread
+entity ActivityThread
+
+Launcher [#green]-> Instrumentation: execStartActivity()
+Instrumentation [#green]-> AMS: Binder: startActivity()
+note left : ActivityManagerNative.getDefault()\n获取到 AMS的代理
+AMS -> AMS: startActivityAsUser
+note left : UserHandle.getCallingUserId()\n获取到 userId
+AMS -> ASS: startActivityMayWait()
+ASS -> PKMS: resolveActivity()
+PKMS -> PKMS: queryIntentActivities()
+PKMS -> PKMS: chooseBestActivity()
+note left :当存在多个满足条件的Activity\n则会弹框让用户来选择。
+PKMS -> ASS: startActivityLocked()
+note left :检查调用者是否有权限来调用指定的 Activity
+ASS -> ASS: startActivityUncheckedLocked()
+note left :进行对 launchMode 的处理，\n创建 Task 等操作。
+activate ASS
+    ASS -> Launcher: ActivityStack.resumeTopActivityInnerLocked()
+    note right :通知Launcher进入Paused状态
+    Launcher --> ASS: 准备就绪，已经进入Paused状态
+deactivate ASS
+
+ASS -> ASS: startSpecificActivityLocked()
+note left :启动 Activity 所在进程，\n已存在则直接 onResume()
+ASS -> ASS: realStartActivityLocked()
+activate ASS
+    ASS -> ApplicationThread: app.thread.scheduleLaunchActivity()
+deactivate ASS
+ApplicationThread -> ActivityThread: mH.sendMessage(H.LAUNCH_ACTIVITY)
+ActivityThread -> ActivityThread: handleLaunchActivity()
+
+activate ActivityThread
+    ActivityThread -> ActivityThread: performLaunchActivity()
+    activate ActivityThread
+        ActivityThread -> Instrumentation: newActivity(classLoader, component.getClassName(), r.intent)
+            activate Instrumentation
+            Instrumentation -> Instrumentation: (Activity)clazz.newInstance();
+            Instrumentation -> Instrumentation: Activity.attach()
+            note left :1.attachBaseContext\n2.初始化Window\n3.初始化 WMS
+            Instrumentation --> ActivityThread
+        deactivate Instrumentation
+        ActivityThread -> Instrumentation: 中间通过Activity xxx -> callActivityOnCreate()
+    deactivate ActivityThread
+
+    ActivityThread -> ActivityThread: handleResumeActivity()
+    activate ActivityThread
+        ActivityThread -> ActivityThread: performResumeActivity()
+        activate ActivityThread
+            ActivityThread -> Instrumentation: xxx -> callActivityOnStart()
+            ActivityThread -> Instrumentation: xxx -> callActivityOnResume()
+        deactivate ActivityThread
+    deactivate ActivityThread
+deactivate ActivityThread
+
+
+@enduml

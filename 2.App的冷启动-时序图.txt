@@ -1,0 +1,65 @@
+@startuml
+
+'请先安装PlantUML plugin查看该uml
+'http://androidxref.com/9.0.0_r3/xref/frameworks/base/cmds/app_process/app_main.cpp'
+'http://androidxref.com/9.0.0_r3/xref/frameworks/base/core/jni/AndroidRuntime.cpp'
+'http://androidxref.com/9.0.0_r3/xref/frameworks/base/core/java/com/android/internal/os/ZygoteLauncher.java'
+'2019-08-13: 说说你对app（或进程）启动流程的理解? ：https://github.com/MicroKibaco/CrazyDailyQuestion/issues/11'
+'参考 3分钟看懂Activity启动流程 ：https://www.jianshu.com/p/9ecea420eb52'
+'Android - Activity 启动过程 ：https://github.com/jeanboydev/Android-ReadTheFuckingSourceCode/blob/master/article/android/framework/Android-Activity%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B.md'
+'一张图弄清Activity的启动过程 ：https://juejin.im/post/5c7f3471f265da2db5425c4b'
+'谈谈app的启动流程 ：https://www.jianshu.com/p/28281b54d318'
+
+title __App的冷启动过程__
+hide footbox
+
+
+entity "Launcher"
+entity "ActivityManagerService\n(在SystemServer进程)" as AMS
+entity "Zygote进程" as Zygote
+entity "App进程" as App
+
+
+Launcher [#green]-> AMS: Binder通信:请求启动Activity：\n Instrumentation.execStartActivity()
+activate AMS
+    AMS -> AMS: 校验Activity
+    AMS --> Launcher: 通知Launcher进入Paused状态
+    Launcher --> AMS: 准备就绪，已经进入Paused状态
+deactivate AMS
+AMS [#green]-> Zygote: socket通信:请求创建App进程
+activate Zygote
+    Zygote [#green]-> Zygote: fork App进程
+    hnote over App#ccffe5: 三部曲：1. 启动进程
+    Zygote -> App: 子进程
+    Zygote --> AMS: 父进程：socket通信:返回App进程pid
+deactivate Zygote
+AMS -> AMS: 记录pid
+AMS -> AMS: 10秒倒计时，\n等待App启动完成报到，\n即下面的attach Application
+hnote over App#ccffe5: 三部曲：2. 初始化
+App [#green]-> App: 0、启动Binder机制
+App [#green]-> App: 1、执行App的入口函数\n ActivityThread.main()
+activate App
+    App [#green]-> App: 2、注册应用端的Binder对象：\n ApplicationThread
+    activate App
+        App [#green]-> AMS: mgr.attachApplication(appThread)
+        note left : App向AMS报到完成！\nApp进程已启动、loop等待中。
+    deactivate App
+    hnote over App#ccffe5: 三部曲：3. 消息循环
+    App -> App: Looper.loop()
+deactivate App
+loop#ccffe5 mH处理AMS通过ApplicationThread发来的消息
+    AMS [#green]-> AMS: 3、初始化Application：
+    activate AMS
+        AMS [#green]-> App: thread.bindApplication();
+    deactivate AMS
+    App -> App: mH.sendMessage(H.BIND_APPLICATION)
+
+    AMS [#green]-> AMS: 4、启动挂起的Activity：
+    activate AMS
+        AMS [#green]-> App: thread.scheduleLaunchActivity()
+    deactivate AMS
+    App -> App: 创建Activity、执行生命周期：\n mH.sendMessage(H.LAUNCH_ACTIVITY)
+end
+
+
+@enduml
