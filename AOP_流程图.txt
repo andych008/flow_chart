@@ -1,0 +1,21 @@
+@startuml
+
+'请先安装PlantUML plugin查看该uml
+start
+
+#ccffe5:javac开始;
+while (还有apt注解没处理?)is (Yes)
+    note right
+      apt介入点
+    end note
+    :apt解析、编译;
+endwhile (No)
+#ccffe5:javac结束;
+
+:aspectj通过asm修改字节码;
+    note right
+      aspectj介入点
+    end note
+end
+
+@enduml

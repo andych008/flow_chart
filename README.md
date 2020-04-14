@@ -9,6 +9,7 @@ Android相关的一些流程图、时序图。帮助理解、记忆。
 - [3.Activity的启动-调用关系-时序图](dist/3.Activity的启动-调用关系-时序图.svg)
 - [4.DecorView绑定-调用关系-时序图](dist/4.DecorView绑定-调用关系-时序图.svg)
 - [5.WMS的事件生成过程_时序图](dist/5.WMS的事件生成过程_时序图.svg)
+- [AOP_流程图](dist/AOP_流程图.svg)
 
 ## 欢迎pull request
 图片使用 [plantuml](https://plantuml.com/zh/) 生成，源文件是纯文本文件。
