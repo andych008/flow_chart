@@ -64,53 +64,51 @@ activate ActivityThread
             ActivityThread -> Activity: xxx -> onResume()
         deactivate ActivityThread
 
-        ActivityThread [#green]-> WindowManager: wm.addView(decor, l);
-        hnote left#ccffe5 : 关键步骤：\n把view加入wms
-        activate WindowManager
-            WindowManager -> WindowManagerGlobal: addView();
-        deactivate WindowManager
-        activate WindowManagerGlobal
-            WindowManagerGlobal -> ViewRootImpl: root = \nnew ViewRootImpl()
-            activate ViewRootImpl
-                hnote over ViewRootImpl#ccffe5: 当前是主线程
-                ViewRootImpl -> ViewRootImpl: mThread = Thread.currentThread();
-                ViewRootImpl -> ViewRootImpl: mWindow = new W(this);
-                note left : 数据类型为IWindow.Stub\n在wms中代表应用端
-                ViewRootImpl -> WindowManagerGlobal: mWindowSession = \nWindowManagerGlobal.getWindowSession();
-                note right : 数据类型为IWindowSession, \n同一进程只对应唯一Session代理对象。
-            deactivate ViewRootImpl
-            WindowManagerGlobal -> ViewRootImpl: root.setView(View view)//比如DecorView
-            activate ViewRootImpl
-                ViewRootImpl -> ViewRootImpl: requestLayout()
-                activate ViewRootImpl
-                    ViewRootImpl -> ViewRootImpl: scheduleTraversals()
-                    activate ViewRootImpl
-                        ViewRootImpl -> Choreographer: mChoreographer.postCallback(… ,mTraversalRunnable)
-                    deactivate ViewRootImpl
-                deactivate ViewRootImpl
-
-                ViewRootImpl -> ViewRootImpl: mInputChannel = new InputChannel();
-                ViewRootImpl -> IWindowSession: mWindowSession.addToDisplay(mWindow, ...mInputChannel)
-                note left : 和wms可以双向通信了\n同时完成InputChannel的注册
-
-                ViewRootImpl -> ViewRootImpl: SyntheticInputStage\n ViewPostImeInputStage\n NativePostImeInputStage\n ...
-                note left : 对责任链进行组装
-                ViewRootImpl -> DecorView: assignParent(this)
-                note left : 终于终于，mDecor知道了自己父亲是谁
-            deactivate ViewRootImpl
-        deactivate WindowManagerGlobal
-        ActivityThread -> Activity: r.activity.makeVisible();
+        ActivityThread -> Activity: xxx -> makeVisible()
         activate Activity
-            Activity -> DecorView : mDecor.makeVisible
-            note right : view可见
+            Activity [#green]-> WindowManager: wm.addView(decor, l);
+            hnote left#ccffe5 : 关键步骤：\n把view加入wms
+            activate WindowManager
+                WindowManager -> WindowManagerGlobal: addView();
+            deactivate WindowManager
+            activate WindowManagerGlobal
+                WindowManagerGlobal -> ViewRootImpl: root = \nnew ViewRootImpl()
+                activate ViewRootImpl
+                    hnote over ViewRootImpl#ccffe5: 当前是主线程
+                    ViewRootImpl -> ViewRootImpl: mThread = Thread.currentThread();
+                    ViewRootImpl -> ViewRootImpl: mWindow = new W(this);
+                    note left : 数据类型为IWindow.Stub\n在wms中代表应用端
+                    ViewRootImpl -> WindowManagerGlobal: mWindowSession = \nWindowManagerGlobal.getWindowSession();
+                    note right : 数据类型为IWindowSession, \n同一进程只对应唯一Session代理对象。
+                deactivate ViewRootImpl
+                WindowManagerGlobal -> ViewRootImpl: root.setView(View view)//比如DecorView
+                activate ViewRootImpl
+                    ViewRootImpl -> ViewRootImpl: requestLayout()
+                    activate ViewRootImpl
+                        ViewRootImpl -> ViewRootImpl: scheduleTraversals()
+                        activate ViewRootImpl
+                            ViewRootImpl -> Choreographer: mChoreographer.postCallback(… ,mTraversalRunnable)
+                        deactivate ViewRootImpl
+                    deactivate ViewRootImpl
+
+                    ViewRootImpl -> ViewRootImpl: mInputChannel = new InputChannel();
+                    ViewRootImpl -> IWindowSession: mWindowSession.addToDisplay(mWindow, ...mInputChannel)
+                    note left : 和wms可以双向通信了\n同时完成InputChannel的注册
+
+                    ViewRootImpl -> ViewRootImpl: SyntheticInputStage\n ViewPostImeInputStage\n NativePostImeInputStage\n ...
+                    note left : 对责任链进行组装
+                    ViewRootImpl -> DecorView: assignParent(this)
+                    note left : 终于终于，mDecor知道了自己父亲是谁
+                deactivate ViewRootImpl
+            deactivate WindowManagerGlobal
+            Activity -> DecorView :  mDecor.setVisibility(View.VISIBLE)
+            note right : view还没开始绘制
         deactivate Activity
     deactivate ActivityThread
 deactivate ActivityThread
 
-'performTraversals'
-'relayoutWindow'
-'mWindowSession.relayout(..., mSurface)'
 
+note over ViewRootImpl #green:屏幕刷新信号来了
 ViewRootImpl -> ViewRootImpl: performTraversals()
 activate ViewRootImpl
     ViewRootImpl -> ViewRootImpl: relayoutWindow()

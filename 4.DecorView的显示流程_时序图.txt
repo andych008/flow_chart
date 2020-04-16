@@ -1,0 +1,64 @@
+@startuml
+
+'请先安装PlantUML plugin查看该uml
+'简述Activity与Window关系 ：http://gityuan.com/2017/04/16/activity-with-window/'
+'Android View 绘制流程之 DecorView 与 ViewRootImpl ：https://www.cnblogs.com/huansky/p/11911549.html'
+'Android中Activity启动过程探究 ：https://www.cnblogs.com/kross/p/4025075.html'mWindowSession.addToDisplay()
+'带你彻底理解 Window 和 WindowManager :https://www.jianshu.com/p/0b9d5627ac99'
+'Android仿微信文章悬浮窗效果  :https://zhuanlan.zhihu.com/p/47085887'
+'我所理解的PhoneWindow的一个作用  :https://blog.csdn.net/u013356254/article/details/55116259'
+
+title __DecorView的显示流程_时序图__
+
+
+entity ActivityThread
+entity Activity
+
+entity DecorView
+
+entity ViewRootImpl
+
+entity WindowManagerImpl as WindowManager
+
+hnote over DecorView#ccffe5: Activity的根View。\n包含：TitleView、ContentView
+hnote over WindowManager#ccffe5: 管理所有的窗口
+hnote over ViewRootImpl#ccffe5: 实现View树的绘制，\n有三个关键方法。
+
+
+ActivityThread -> ActivityThread: handleLaunchActivity()
+activate ActivityThread
+
+ActivityThread -> Activity: xxx -> attach()
+hnote over Activity#ccffe5 : 第一步：\n创建PhoneWindow\n和WindowManager
+
+
+ActivityThread -> Activity: xxx -> onCreate()
+activate Activity
+    Activity -> Activity: setContentView()
+    activate Activity
+        hnote over Activity#ccffe5 : 第二步：\n创建decorView
+        Activity [#green]-> DecorView: PhoneWindow#installDecor()
+        note right : installDecor()只是建立\nview tree的数据结构，\n还没开始显示
+    deactivate Activity
+deactivate Activity
+
+ActivityThread -> Activity: xxx -> onStart()
+
+ActivityThread -> Activity: xxx -> onResume()
+
+ActivityThread -> Activity: xxx -> makeVisible()
+activate Activity
+    hnote over Activity#ccffe5 : 第三步：\ndecorView加入wms
+    Activity [#green]-> WindowManager: wm.addView(decor, l);
+    note right : 1. 创建ViewRootImpl\n2. 和wms建立双向通信
+deactivate Activity
+
+
+note over ViewRootImpl #green:屏幕刷新信号来了
+
+hnote over ViewRootImpl#ccffe5 : 第四步：\n申请Surface绘制
+
+ViewRootImpl -> ViewRootImpl: performTraversals()
+activate ViewRootImpl
+deactivate ViewRootImpl
+@enduml

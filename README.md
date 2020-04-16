@@ -7,7 +7,8 @@ Android相关的一些流程图、时序图。帮助理解、记忆。
 - [1.Android启动过程-时序图](dist/1.Android启动过程-时序图.svg)
 - [2.App的冷启动-时序图](dist/2.App的冷启动-时序图.svg)
 - [3.Activity的启动-调用关系-时序图](dist/3.Activity的启动-调用关系-时序图.svg)
-- [4.DecorView绑定-调用关系-时序图](dist/4.DecorView绑定-调用关系-时序图.svg)
+- [4.DecorView调用关系-时序图](dist/4.DecorView调用关系-时序图.svg)
+- [4.DecorView的显示流程_时序图](dist/4.DecorView的显示流程_时序图.svg)
 - [5.WMS的事件生成过程_时序图](dist/5.WMS的事件生成过程_时序图.svg)
 - [AOP_流程图](dist/AOP_流程图.svg)
 
