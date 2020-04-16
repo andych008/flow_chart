@@ -3,7 +3,7 @@
 '请先安装PlantUML plugin查看该uml
 
 
-title __WMS的事件生成过程__
+title __IMS的事件生成过程__
 
 
 entity EventHub

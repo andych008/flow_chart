@@ -78,8 +78,8 @@ activate ActivityThread
                     ViewRootImpl -> ViewRootImpl: mThread = Thread.currentThread();
                     ViewRootImpl -> ViewRootImpl: mWindow = new W(this);
                     note left : 数据类型为IWindow.Stub\n在wms中代表应用端
-                    ViewRootImpl -> WindowManagerGlobal: mWindowSession = \nWindowManagerGlobal.getWindowSession();
-                    note right : 数据类型为IWindowSession, \n同一进程只对应唯一Session代理对象。
+                    ViewRootImpl -> ViewRootImpl: mWindowSession = \nWindowManagerGlobal.getWindowSession();
+                    note left : 数据类型为IWindowSession, \n一个进程只有一个Session代理对象。
                 deactivate ViewRootImpl
                 WindowManagerGlobal -> ViewRootImpl: root.setView(View view)//比如DecorView
                 activate ViewRootImpl
@@ -87,12 +87,12 @@ activate ActivityThread
                     activate ViewRootImpl
                         ViewRootImpl -> ViewRootImpl: scheduleTraversals()
                         activate ViewRootImpl
-                            ViewRootImpl -> Choreographer: mChoreographer.postCallback(… ,mTraversalRunnable)
+                            ViewRootImpl -> Choreographer: postCallback(… ,mTraversalRunnable)
                         deactivate ViewRootImpl
                     deactivate ViewRootImpl
 
                     ViewRootImpl -> ViewRootImpl: mInputChannel = new InputChannel();
-                    ViewRootImpl -> IWindowSession: mWindowSession.addToDisplay(mWindow, ...mInputChannel)
+                    ViewRootImpl -> IWindowSession: addToDisplay(mWindow, ...mInputChannel)
                     note left : 和wms可以双向通信了\n同时完成InputChannel的注册
 
                     ViewRootImpl -> ViewRootImpl: SyntheticInputStage\n ViewPostImeInputStage\n NativePostImeInputStage\n ...
@@ -102,7 +102,7 @@ activate ActivityThread
                 deactivate ViewRootImpl
             deactivate WindowManagerGlobal
             Activity -> DecorView :  mDecor.setVisibility(View.VISIBLE)
-            note right : view还没开始绘制
+            note right : view还没开始绘制\n只是触发一次重绘。
         deactivate Activity
     deactivate ActivityThread
 deactivate ActivityThread
@@ -112,9 +112,14 @@ note over ViewRootImpl #green:屏幕刷新信号来了
 ViewRootImpl -> ViewRootImpl: performTraversals()
 activate ViewRootImpl
     ViewRootImpl -> ViewRootImpl: relayoutWindow()
+    note right : 申请Surface，\n有了Surface才可以把绘制的内容写入其中的buffer
     activate ViewRootImpl
         ViewRootImpl -> IWindowSession: mWindowSession.relayout(..., mSurface)
-        note left : 申请Surface，\n有了Surface才可以把绘制的内容写入其中的buffer
     deactivate ViewRootImpl
+    ViewRootImpl -> ViewRootImpl: performMeasure()
+    ViewRootImpl -> ViewRootImpl: performLayout()
+    ViewRootImpl -> ViewRootImpl: performDraw()
 deactivate ViewRootImpl
+
+
 @enduml
