@@ -1,16 +1,20 @@
 # flow_chart
 Android相关的一些流程图、时序图。帮助理解、记忆。
-如需要png文件
 
 
 ## svg图片，在浏览器上直接看
-- [1.Android启动过程-时序图](dist/1.Android启动过程-时序图.svg)
-- [2.App的冷启动-时序图](dist/2.App的冷启动-时序图.svg)
-- [3.Activity的启动-调用关系-时序图](dist/3.Activity的启动-调用关系-时序图.svg)
-- [4.DecorView调用关系-时序图](dist/4.DecorView调用关系-时序图.svg)
-- [4.DecorView的显示流程_时序图](dist/4.DecorView的显示流程_时序图.svg)
-- [5.WMS的事件生成过程_时序图](dist/5.WMS的事件生成过程_时序图.svg)
-- [AOP_流程图](dist/AOP_流程图.svg)
+- [1.Android启动过程-时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/1.Android启动过程-时序图.svg)
+- [2.App的冷启动-时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/2.App的冷启动-时序图.svg)
+- [3.Activity的启动-调用关系-时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/3.Activity的启动-调用关系-时序图.svg)
+- [4.DecorView调用关系-时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/4.DecorView调用关系-时序图.svg)
+- [4.DecorView的显示流程_时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/4.DecorView的显示流程_时序图.svg)
+- [5.WMS的事件生成过程_时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/5.WMS的事件生成过程_时序图.svg)
+- [AOP_流程图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/AOP_流程图.svg)
+
+
+## 如需要png文件
+`java -jar -Dfile.encoding=UTF8 plantuml.jar xxx.txt`可以把txt源文件转成png格式。
+
 
 ## 欢迎pull request
 图片使用 [plantuml](https://plantuml.com/zh/) 生成，源文件是纯文本文件。
