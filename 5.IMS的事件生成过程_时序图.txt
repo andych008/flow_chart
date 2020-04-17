@@ -14,6 +14,7 @@ entity InputDispatcher
 entity InputMonitor
 entity WindowManagerService as wms
 entity "ViewRootImpl中的\n WindowInputEventReceiver" as InputEventReceiver
+'WindowInputEventReceiver 是ViewRootImpl的内部类，
 entity DecorView
 
 hnote over Queue#ccffe5:事件缓存队列
