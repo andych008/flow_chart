@@ -36,6 +36,7 @@ App -> App: (Application)clazz.newInstance();
 'https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/app/Application.java;bpv=1;bpt=1;l=350'
 App -> App: app.attach(context);
 note left :1.attachBaseContext\n2.取出mLoadedApk
+App -> App: app.onCreate();
 
 AMS -> App: thread.scheduleLaunchActivity()
 App -> App: (Activity)clazz.newInstance();
