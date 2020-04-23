@@ -5,9 +5,10 @@ Android相关的一些流程图、时序图。帮助理解、记忆。
 ## svg图片，在浏览器上直接看
 - [1.Android启动过程-时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/1.Android启动过程-时序图.svg)
 - [2.App的冷启动-时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/2.App的冷启动-时序图.svg)
+- [2.App的启动流程](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/2.App的启动流程.svg)
 - [3.Activity的启动-调用关系-时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/3.Activity的启动-调用关系-时序图.svg)
 - [4.DecorView调用关系-时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/4.DecorView调用关系-时序图.svg)
-- [4.DecorView的显示流程_时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/4.DecorView的显示流程_时序图.svg)
+- [4.DecorView的创建、显示流程](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/4.DecorView的创建、显示流程.svg)
 - [5.IMS的事件生成过程_时序图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/5.IMS的事件生成过程_时序图.svg)
 - [AOP_流程图](https://raw.githubusercontent.com/andych008/flow_chart/master/dist/AOP_流程图.svg)
 

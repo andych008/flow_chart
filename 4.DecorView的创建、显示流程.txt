@@ -8,7 +8,7 @@
 'Android仿微信文章悬浮窗效果  :https://zhuanlan.zhihu.com/p/47085887'
 '我所理解的PhoneWindow的一个作用  :https://blog.csdn.net/u013356254/article/details/55116259'
 
-title __DecorView的显示流程_时序图__
+title __DecorView的创建、显示流程__
 
 
 entity ActivityThread
