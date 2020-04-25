@@ -10,7 +10,6 @@ entity Zygote
 
 entity "App进程" as App
 entity Activity
-entity ViewRootImpl
 entity WMS
 
 
@@ -23,6 +22,8 @@ activate Zygote
     Zygote -> App: fork App进程
 deactivate Zygote
 
+App -> App: AppRuntime#onZygoteInit()
+note left :开启binder机制
 
 App -> App: ActivityThread.main()
 note left :开启loop
@@ -33,39 +34,31 @@ deactivate App
 
 AMS -> App: thread.bindApplication();
 App -> App: (Application)clazz.newInstance();
-'https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/app/Application.java;bpv=1;bpt=1;l=350'
 App -> App: app.attach(context);
 note left :1.attachBaseContext\n2.取出mLoadedApk
+App -> App: installContentProviders();
+note left :1.一些第三方库会在这里做初始化
 App -> App: app.onCreate();
 
-AMS -> App: thread.scheduleLaunchActivity()
-App -> App: (Activity)clazz.newInstance();
-'https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/app/Activity.java;l=7724;bpv=1;bpt=1'
-App -> Activity:  attach(context, ..., application,)
-note left :1.attachBaseContext\n2.初始化Window
+AMS -> App: thread.scheduleTransaction()
+activate App
+    App -> App:handleLaunchActivity()
+    activate App
+        App -> Activity: (Activity)clazz.newInstance();
+        App -> Activity:  attach(context, ..., application,)
+        note left :1.attachBaseContext\n2.初始化Window
 
-App -> Activity:  onCreate()
-note left :1.installDecorView
+        App -> Activity:  onCreate()
+        note left :1.installDecorView
+    deactivate App
 
-App -> Activity:  onResume()
-App -> Activity:  makeVisible()
-Activity -> Activity:  wm.addView(decorView)
-activate Activity
-    Activity -> ViewRootImpl: new ViewRootImpl()
-    Activity -> ViewRootImpl: setView(decorView)
-
-    ViewRootImpl -> ViewRootImpl: scheduleTraversals()
-    note left :1.注册VSync信号
-
-    ViewRootImpl -> WMS: IWindowSession#addToDisplay(mWindow, ...mInputChannel)
-    note left#ccffe5 : 注册IWindow，InputChannel，\n可以和WMS双向通信。
-    ViewRootImpl --> Activity
-deactivate Activity
-
-
-
-
-
+    App -> App:handleResumeActivity()
+    activate App
+        App -> Activity:  onResume()
+        App -> WMS:  wm.addView(decorView)
+        note left#ccffe5 : 注册IWindow，InputChannel，\n可以和WMS双向通信。
+    deactivate App
+deactivate App
 
 
 @enduml
